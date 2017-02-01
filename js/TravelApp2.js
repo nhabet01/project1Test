@@ -3,7 +3,6 @@ $(document).ready(function() {
     $("#destinationForm").validate();
 
     var recentSearch=["NC/Charlotte"];
-    var imgUrlArr=["assets/img/loading.gif"];
     var numSearches= recentSearch.length;
     console.log(numSearches);
     var lat = "";
@@ -11,8 +10,6 @@ $(document).ready(function() {
     var dispLoc ="";
     var lastSearch="";
     var key = "AIzaSyCq4uYyLv9Msbfrc-tgFhnIKQiZssVr1Dc";
-    var count = 1;
-    var showPhoto;
 
     var config = {
         apiKey: "AIzaSyD0FYqD4sBTgNwR56nFJn4AlS5Y8PKHJw4",
@@ -35,7 +32,11 @@ $(document).ready(function() {
 
                 var lat = results[0].geometry.location.lat();
                 var lng = results[0].geometry.location.lng();
+                // Store the destination into localStorage using "localStorage.setItem"
+                localStorage.setItem("lat", JSON.stringify(lat));
+                localStorage.setItem("lng", JSON.stringify(lng));
                 dispLoc = results[0].formatted_address;
+                localStorage.setItem("dispLoc", dispLoc);
                 console.log(dispLoc);
 
                 initMap(lat,lng);
@@ -45,7 +46,7 @@ $(document).ready(function() {
                 // alert("Latitude: "+results[0].geometry.location.lat());
                 // alert("Longitude: "+results[0].geometry.location.lng());
                 console.log("lat: "+lat+" lng: "+ lng);
-                console.log(results);
+            console.log(results);
             } 
 
             else {
@@ -87,9 +88,11 @@ $(document).ready(function() {
         var locationFull = $('<p>').text(parsed_json['current_observation']['display_location']["full"]);
         var temp_f = $('<p>').text(parsed_json['current_observation']['temp_f']);
         var temperature_string = $('<p>').text("Current Temp: "+parsed_json['current_observation']['temperature_string']);
+        localStorage.setItem("temperature_string", JSON.stringify(temperature_string));
         var weather = $('<p>').text("Current Observation: "+parsed_json['current_observation']['weather']);
+        localStorage.setItem("weather", weather);
         var rel_humid = $('<p>').text("Humidity: " + parsed_json['current_observation']['relative_humidity']);
-        
+        localStorage.setItem("rel_humid", JSON.stringify(rel_humid));
         var icon_current = $('<img alt = current obs icon>').attr('src', parsed_json['current_observation']['icon_url']);
         var icon_current2 = $('<img>').attr('src', parsed_json.current_observation.icon_url);
         
@@ -142,33 +145,6 @@ $(document).ready(function() {
 
       });
     }
-
-
-        // This function will replace display whatever image it's given in the 'src' attribute
-    function displayPhotos(){
-        var placeImg =$("<img>");
-        placeImg.attr('src', imgUrlArr[count]);
-        placeImg.addClass('placeImages')
-        $('#google').html(placeImg);
-        
-    }
-
-    function nextPhoto(){
-        count++;
-
-        setTimeout(displayPhotos,2000);
-        // cycle through once the last image is shown:
-        if (count ===imgUrlArr.length){
-            count===1;
-        }
-    }
-
-    function startSlideshow(){
-        showPhoto = setInterval(nextPhoto, 1000);
-        
-    }
-
-
     //new function
     function placePhotos(lat, lng){
         // var photoRef;
@@ -179,7 +155,7 @@ $(document).ready(function() {
             method: "GET"
         }).done(function(response){
             console.log(response);
-            // console.log(response.results[0].photos[0].photo_reference);
+            console.log(response.results[0].photos[0].photo_reference);
 
              for ( var i = 0; i < 11; i++){
 
@@ -189,22 +165,19 @@ $(document).ready(function() {
                     console.log(photoRef);
             
                     var url = 'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference='+ photoRef +'&key='+key;
+                    var placeImg =$("<img>");
+                    placeImg.attr('src', url);
+                    placeImg.addClass('placeImages')
+                    $('#google').append(placeImg);
+
                     console.log(url);
-                    imgUrlArr.push(url);
-                    console.log(imgUrlArr); 
-                    displayPhotos();              
                 }
+
             }
+
         });
-        console.log(imgUrlArr);
-        
 
     }
-    
-
-    $(document).on('click', '.placeImages', startSlideshow);
-
-
 
     //Function for individual pages to call
     // Firebase watcher + initial loader 
@@ -261,6 +234,9 @@ $(document).ready(function() {
         console.log(destination);
         $('#location-input').val(" ");
 
+        // Store the destination into localStorage using "localStorage.setItem"
+        localStorage.setItem("destination", destination);
+
         //add destination to firebase
         database.ref('searches/').push({
             Location: destination
@@ -297,9 +273,14 @@ $(document).ready(function() {
         var destination = $(this).text();
         $("#google").empty();
         $("#weatherDispl").empty();
-        imgUrlArr=["assets/img/loading.gif"];
+
+        // Store the destination into localStorage using "localStorage.setItem"
+        localStorage.setItem("destination", destination);
+
         codeAddress(destination);
     });
 
 
-});
+});     
+
+
